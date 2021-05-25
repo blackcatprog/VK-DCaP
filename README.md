@@ -1,4 +1,4 @@
-
+<p align="center"><img src="logo.png" height="120"></p>
 <h1 align="center">VK-DCaP</h1>
 <p align="center">
 <a href="https://github.com/blackcatprog/VK-DCaP/releases"><img src="https://img.shields.io/github/v/release/blackcatprog/VK-DCaP?color=blueviolet"></a>
