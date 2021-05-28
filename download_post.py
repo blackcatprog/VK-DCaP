@@ -1,6 +1,8 @@
 import vk_api
-from cfg import token
+from cfg import *
+from logs import *
 import requests
+from colorama import Fore
 
 def download_post(user_id, count, _photo=0, _music=0, _document=0):
 	#params
@@ -19,8 +21,14 @@ def download_post(user_id, count, _photo=0, _music=0, _document=0):
 	except vk_api.exceptions.ApiError as err:
 		getWall = session.method("wall.get", {
 			"owner_id": "-"+user_id,
-			"count": count
+			"count": count,
+			"extended": 1
 			})
+	except vk_api.exceptions.ApiError as err:
+		err = str(err)
+		if err[1] == "5":
+			print(error + " - Неправильный токен")
+		sys.exit(1)
 
 	name = getWall["profiles"][0]["first_name"] + " " + getWall["profiles"][0]["last_name"]
 
@@ -56,13 +64,30 @@ def download_post(user_id, count, _photo=0, _music=0, _document=0):
 		elif len(j["attachments"]) >= 1:
 			if j["attachments"][0]["type"] == "photo":
 				if DOWNLOAD_PHOTO == 0:
-					url_photo = j["attachments"][0]["photo"]["sizes"][0]["url"]
+					if DOWNLOAD_PHOTO == 0:
+						if SIZE_PHOTO == 0:
+							what_size_photo = str(input("В каком качестве скачать изображения (s(75px), m(130px), x(604px)): "))
+							if what_size_photo == "s":
+								SIZE_PHOTO = 5
+							elif what_size_photo == "m":
+								SIZE_PHOTO = 0
+							elif what_size_photo == "x":
+								SIZE_PHOTO = 6
+					url_photo = j["attachments"][0]["photo"]["sizes"][SIZE_PHOTO]["url"]
 					html2 += f'''<div style='width: 500px; height: 250px; box-sizing: content-box'><span style=''><img src='{url_photo}'
 						style='padding: 10px; border-radius: 20px'>{j["text"]}<div style='padding: 10px'><span style='display: inline-block; padding: 10px'>
 						{j["likes"]["count"]} лайков &ensp; {j["reposts"]["count"]} репостов &ensp; {j["views"]["count"]} просмотров
 						</span></div></span></div>'''
 				elif DOWNLOAD_PHOTO == 1:
-					url_photo = j["attachments"][0]["photo"]["sizes"][0]["url"]
+					if SIZE_PHOTO == 0:
+							what_size_photo = str(input("В каком качестве скачать изображения (s(75px), m(130px), x(604px)): "))
+							if what_size_photo == "s":
+								SIZE_PHOTO = 5
+							elif what_size_photo == "m":
+								SIZE_PHOTO = 0
+							elif what_size_photo == "x":
+								SIZE_PHOTO = 6
+					url_photo = j["attachments"][0]["photo"]["sizes"][SIZE_PHOTO]["url"]
 					url_photo = requests.get(url_photo)
 					name_photo = f"{(dt.fromtimestamp(getHistory['items'][i]['attachments'][0]['photo']['date'])).strftime('%d-%m-%y~%H-%M')}.jpg"
 					with open(name_photo, "wb") as file:
@@ -119,3 +144,5 @@ def download_post(user_id, count, _photo=0, _music=0, _document=0):
 
 	with open("post.html", "w", encoding="utf-8") as file:
 		file.write(html_join)
+
+	print(succes + "Пост(ы) скачан(ы)")

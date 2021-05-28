@@ -3,6 +3,7 @@ import argparse as arg
 from download_post import download_post
 from download_chat import download_chat
 
+#flags##########################################################################################################
 pars = arg.ArgumentParser()
 pars.add_argument("-cd", dest="cd", help="скачивание диалога")
 pars.add_argument("-pd", dest="pd", help="скачивание поста")
@@ -12,15 +13,18 @@ pars.add_argument("-ad", dest="aud", help="скачивать голосовые
 pars.add_argument("-md", dest="mus", help="скачивать музыку вместо подставления ссылок", action="store_true")
 pars.add_argument("-dd", dest="doc", help="скачивать документы вместо подставления ссылок", action="store_true")
 args = pars.parse_args()
+#################################################################################################################
 
+#value_params
 count_ = 20
 id_ = 0
 ad_ = 0
 md_ = 0
 dd_ = 0
+#############
 
 def graphic():
-	print("VK-DCaP v1.0.0.3")
+	print("VK-DCaP v1.0.0.4")
 	print("Copyright (C) 2021 blackcat")
 	print("github repository: github.com/blackcatprog/VK-DCaP\n")
 
