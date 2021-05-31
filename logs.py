@@ -7,3 +7,4 @@ kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
 
 error = Fore.RED + "[ОШИБКА]" + Fore.RESET + " - "
 succes = Fore.GREEN + "[УСПЕШНО]" + Fore.RESET + " - "
+warn = Fore.YELLOW + "[СОМНЕНИЕ]" + Fore.RESET + " - "
