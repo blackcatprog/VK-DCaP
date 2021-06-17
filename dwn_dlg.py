@@ -807,7 +807,6 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _folder=0, _af=0,
 			elif getHistory["conversations"][0]["peer"]["type"] == "chat":
 				users = f"<center style='color: #fff; padding: 10px'>Участиков: {str(getHistory['conversations'][0]['chat_settings']['members_count'])}</center>"
 			
-			avatar = ""
 			try:
 				if avatar == "":
 					if getHistory["conversations"][0]["peer"]["type"] == "user":
@@ -1453,7 +1452,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _folder=0, _af=0,
 					elif len(getHistory["items"][i]["attachments"]) < 1:
 						sms = getHistory["items"][i]["text"]
 						html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 10px; margin: 10px -50px auto 5px'>
-										{sms}
+										<code>{sms}</code>
 										<span style='font-size: 10px; color: #000; font-weight: bold; margin-left: 5px'>
 											{user}
 										</span>
@@ -1463,10 +1462,9 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _folder=0, _af=0,
 									</div>
 									<br>'''
 
-				off += 200
+                off += 200
 				print(f"Скачано {off} сообщений")
-				msga = getHistory["count"]-off
-				if msga < 200:
+				if getHistory["count"] < 200:
 				    off = getHistory["count"]
 				elif getHistory["count"] == 0:
 				    sys.exit(1)
