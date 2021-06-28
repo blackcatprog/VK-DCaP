@@ -1,41 +1,40 @@
-try:
-	import vk_api
-	from cfg import *
-	import requests
-	import os
-	import sys
-	from colorama import Fore
-	from datetime import datetime as dt
-except KeyboardInterrupt:
-	print(error + "Выход")
-	sys.exit(1)
-except ModuleNotFoundError as err:
-	err = str(err)
-	err = err.split("'", 2)
-	print(error + f"Не установлен модуль {err[1]}!")
+import sys
+import vk_api
+from cfg import token
+import requests
+from datetime import datetime as dt
+import os
+import time
+import locale
+from logs import *
+
+#if in cfg don't have token
+if token == "":
+	error("Отсутствует токен!")
 	sys.exit(1)
 
-def dwn_pst(id_, count, _photo=0, _music=0, _document=0, _folder=0, _af=0):
-	DOWNLOAD_PHOTO = _photo
-	DOWNLOAD_MUSIC = _music
-	DOWNLOAD_DOCUMENT = _document
+#function for authorization in vk.com
+def auth():
+	global session
+	session = vk_api.VkApi(token = token)
+	succes("Авторизация!")
+
+#####################################
+def dwn_pst(id_, count, _photo=0, _music=0, _doc=0, _folder=0, _af=0):
 	SIZE_PHOTO = 0
-	FOLDER = _folder
-	LOG = _log
 
 	if _af == 1:
-		DOWNLOAD_PHOTO, DOWNLOAD_MUSIC, DOWNLOAD_DOCUMENT = 1, 1, 1
+		_photo, _music, _doc = 1, 1, 1
 
-	#авторизация вконтакте
-	session = vk_api.VkApi(token = token)
+	auth()
 
 	try:
-		if FOLDER != 0:
-			os.mkdir(FOLDER)
+		if _folder != 0:
+			os.mkdir(_folder)
 	except FileExistsError:
-		print(warn + "Такая папка уже существует!")
+		warn("Такая папка уже существует!")
 
-	#получение истории постов
+	#get posts history
 	try:
 		getWall = session.method("wall.get", {
 			"domain": id_,
@@ -57,53 +56,83 @@ def dwn_pst(id_, count, _photo=0, _music=0, _document=0, _folder=0, _af=0):
 					"fields": "members_count"
 					})
 				if getWall["count"] == 0:
-					print(error + "Пользователь/группа не существует!")
+					error("Пользователь/группа не существует!")
 					sys.exit(1)
 	except KeyboardInterrupt:
-		print(error + "Выход!")
+		warn("Выход!")
 		sys.exit(1)
 	except vk_api.exceptions.ApiError as err:
 		err = str(err)
 		if err[1] == "5":
-			print(error + "Неправильный токен")
+			error("Неправильный токен")
 			sys.exit(1)
 		elif err[1:4] == "100":
-			print(error + "Неправильный id пользователя/группы")
+			error("Неправильный id пользователя/группы")
 			sys.exit(1)
 
-	#получаем имя пользователя/группы
-	if len(getWall["groups"]) >= 1:
-		name = getWall["groups"][0]["name"]
-	else:
-		name = getWall["profiles"][0]["first_name"] + " " + getWall["profiles"][0]["last_name"]
+	#get name user/group
+	try:
+		if len(getWall["groups"]) >= 1:
+			name = getWall["groups"][0]["name"]
+			succes("Название диалога получено!")
+		else:
+			name = getWall["profiles"][0]["first_name"] + " " + getWall["profiles"][0]["last_name"]
+			succes("Название диалога получено!")
+	except KeyboardInterrupt:
+		warn("Выход!")
+		sys.exit(1)
 
-	#получаем автарку пользователя/группы
-	if len(getWall["groups"]) >= 1:
-		ava = getWall["groups"][0]["photo_100"]
-		ava = requests.get(ava)
-	else:
-		ava = getWall["profiles"][0]["photo_100"]
-		ava = requests.get(ava)
+	#get avatar user/group
+	try:
+		if len(getWall["groups"]) >= 1:
+			ava = getWall["groups"][0]["photo_100"]
+			ava = requests.get(ava)
+			succes("Аватарка получена!")
+		else:
+			ava = getWall["profiles"][0]["photo_100"]
+			ava = requests.get(ava)
+			succes("Аватарка получена!")
+	except KeyboardInterrupt:
+		warn("Выход!")
+		sys.exit(1)
 
-	#создаём ссылку на пользователя/руппу
-	if len(getWall["groups"]) >= 1:
-		link_user = "https://vk.com/" + getWall["groups"][0]["screen_name"]
-	else:
-		link_user = "https://vk.com/" + getWall["profiles"][0]["screen_name"]
+	#create link on user/group
+	try:
+		if len(getWall["groups"]) >= 1:
+			link_user = "https://vk.com/" + getWall["groups"][0]["screen_name"]
+			succes("Ссылка на группу получена!")
+		else:
+			link_user = "https://vk.com/" + getWall["profiles"][0]["screen_name"]
+			succes("Ссылка на пользователя получена!")
+	except KeyboardInterrupt:
+		warn("Выход!")
+		sys.exit(1)
 
-	#получаем количество участников (для групп)
-	if "members_count" in getWall["groups"][0].keys():
-		users = "<center style='font-family: sans-serif; color: #fff; padding: 10px'>Участиков: " + str(getWall["groups"][0]["members_count"]) + "</center>"
-	else:
-		users = ""
+	#get count users (only for groups)
+	try:
+		if "members_count" in getWall["groups"][0].keys():
+			users = "<center style='font-family: sans-serif; color: #fff; padding: 10px'>Участиков: " + str(getWall["groups"][0]["members_count"]) + "</center>"
+			succes("Количество участников получено!")
+		else:
+			users = ""
+			info("Количество пользователей не получено!")
+	except KeyboardInterrupt:
+		warn("Выход!")
+		sys.exit(1)
 
 	#если указана папка для сохранения, аватарка сохраняется в неё
-	if FOLDER == 0:
-		with open("ava.jpg", "wb") as ava_:
-			ava_.write(ava.content)
-	elif FOLDER != 0:
-		with open(f"{FOLDER}/ava.jpg", "wb") as ava_:
-			ava_.write(ava.content)
+	try:
+		if _folder == 0:
+			with open("ava.jpg", "wb") as ava_:
+				ava_.write(ava.content)
+				succes("Аватарка скачана!")
+		elif _folder != 0:
+			with open(f"{_folder}/ava.jpg", "wb") as ava_:
+				ava_.write(ava.content)
+				succes("Аватарка скачана!")
+	except KeyboardInterrupt:
+		warn("Выход!")
+		sys.exit(1)
 
 	style = '''::-webkit-scrollbar {
     width: 12px;
@@ -141,13 +170,15 @@ def dwn_pst(id_, count, _photo=0, _music=0, _document=0, _folder=0, _af=0):
 	</body>
 </html>'''
 
-	#форматируем диалог
+	succes("Html шаблоны созданы!")
+
+	#formating dialog
 	try:
-		for i in range(count):
+		for i in range(int(count)):
 			j = getWall["items"][i]
 			if "attachments" in j.keys():
 				if j["attachments"][0]["type"] == "photo":
-					if DOWNLOAD_PHOTO == 0:
+					if _photo == 0:
 						if SIZE_PHOTO == 0:
 							what_size_photo = str(input("В каком качестве скачать изображения (s(75px), m(130px), x(604px)): "))
 							if what_size_photo == "s":
@@ -168,7 +199,7 @@ def dwn_pst(id_, count, _photo=0, _music=0, _document=0, _folder=0, _af=0):
 											</span>
 										</div>
 									</div>'''
-					elif DOWNLOAD_PHOTO == 1:
+					elif _photo == 1:
 						if SIZE_PHOTO == 0:
 							what_size_photo = str(input("В каком качестве скачивать изображения (s(75px), m(130px), x(604px)): "))
 							if what_size_photo == "s":
@@ -180,11 +211,11 @@ def dwn_pst(id_, count, _photo=0, _music=0, _document=0, _folder=0, _af=0):
 						url_photo = j["attachments"][0]["photo"]["sizes"][SIZE_PHOTO]["url"]
 						url_photo = requests.get(url_photo)
 						name_photo = f"{(dt.fromtimestamp(j['attachments'][0]['photo']['date'])).strftime('%d-%m-%y~%H-%M')}.jpg"
-						if FOLDER == 0:
+						if _folder == 0:
 							with open(name_photo, "wb") as file:
 								file.write(url_photo.content)
-						elif FOLDER != 0:
-							with open(f"{FOLDER}/{name_photo}", "wb") as file:
+						elif _folder != 0:
+							with open(f"{_folder}/{name_photo}", "wb") as file:
 								file.write(url_photo.content)
 						html2 += f'''<div style='margin-bottom: 10px; width: 750px; box-sizing: content-box; background: linear-gradient(to right, #3E608A, #69A3EA); border-radius: 10px; font-family: sans-serif; margin-left: auto; margin-right: auto;'>
 										<div style="padding: 10px">
@@ -198,7 +229,7 @@ def dwn_pst(id_, count, _photo=0, _music=0, _document=0, _folder=0, _af=0):
 										</div>
 									</div>'''
 				elif j["attachments"][0]["type"] == "audio":
-					if DOWNLOAD_MUSIC == 0:
+					if _music == 0:
 						url_music = j["attachments"][0]["audio"]["url"]
 						html2 += f'''<div style='margin-bottom: 10px; width: 750px; box-sizing: content-box; background: linear-gradient(to right, #3E608A, #69A3EA); border-radius: 10px; font-family: sans-serif; margin-left: auto; margin-right: auto;'>
 										<audio src='{url_music}' controls='controls' style='padding: 10px'>
@@ -209,15 +240,15 @@ def dwn_pst(id_, count, _photo=0, _music=0, _document=0, _folder=0, _af=0):
 											</span>
 										</div>
 									</div>'''
-					elif DOWNLOAD_MUSIC == 1:
+					elif _music == 1:
 						url_music = j["attachments"][0]["audio"]["url"]
 						url_music = requests.get(url_music)
 						name_music = f"{(dt.fromtimestamp(j['date'])).strftime('%d-%m-%y~%H-%M')}.mp3"
-						if FOLDER == 0:
+						if _folder == 0:
 							with open(name_music, "wb") as file:
 								file.write(url_music.content)
-						elif FOLDER != 0:
-							with open(f"{FOLDER}/{name_music}", "wb") as file:
+						elif _folder != 0:
+							with open(f"{_folder}/{name_music}", "wb") as file:
 								file.write(url_msuic.content)
 						html2 += f'''<div style='margin-bottom: 10px; width: 750px; box-sizing: content-box; background: linear-gradient(to right, #3E608A, #69A3EA); border-radius: 10px; font-family: sans-serif; margin-left: auto; margin-right: auto;'>
 										<audio src='{name_music}' controls='controls' style='padding: 10px'></audio>
@@ -229,7 +260,7 @@ def dwn_pst(id_, count, _photo=0, _music=0, _document=0, _folder=0, _af=0):
 										</div>
 									</div>'''
 				elif j["attachments"][0]["type"] == "doc":
-					if DOWNLOAD_DOCUMENT == 0:
+					if _doc == 0:
 						url_doc = j["attachments"][0]["audio"]["url"]
 						html2 += f'''<div style='margin-bottom: 10px; width: 750px; box-sizing: content-box; background: linear-gradient(to right, #3E608A, #69A3EA); border-radius: 10px; font-family: sans-serif; margin-left: auto; margin-right: auto;'>
 										<a href='{url_doc}'>ДОКУМЕНТ</a>
@@ -239,17 +270,17 @@ def dwn_pst(id_, count, _photo=0, _music=0, _document=0, _folder=0, _af=0):
 											</span>
 										</div>
 									</div>'''
-					elif DOWNLOAD_DOCUMENT == 1:
+					elif _doc == 1:
 						url_doc = j["attachments"][0]["doc"]["url"]
 						doc_type = getHistory["items"][i]["attachments"][0]["doc"]["ext"]
 						url_doc = requests.get(url_doc)
 						name_doc = f"{(dt.fromtimestamp(j[i]['date'])).strftime('%d-%m-%y~%H-%M')}.{doc_type}"
 						if doc_type == "jpg" or "png":
-							if FOLDER == 0:
+							if _folder == 0:
 								with open(name_doc, "wb") as file:
 									file.write(url_doc.content)
-							elif FOLDER != 0:
-								with open(f"{FOLDER}/{name_doc}", "wb") as file:
+							elif _folder != 0:
+								with open(f"{_folder}/{name_doc}", "wb") as file:
 									file.write(url_doc.content)
 							html2 += f'''<div style='margin-bottom: 10px; width: 750px; box-sizing: content-box; background: linear-gradient(to right, #3E608A, #69A3EA); border-radius: 10px; font-family: sans-serif; margin-left: auto; margin-right: auto;'>
 											<img src='{name_doc}' style='padding: 10px; border-radius: 20px'>
@@ -261,11 +292,11 @@ def dwn_pst(id_, count, _photo=0, _music=0, _document=0, _folder=0, _af=0):
 											</div>
 										</div>'''
 						elif doc_type == "mp3":
-							if FOLDER == 0:
+							if _folder == 0:
 								with open(name_doc, "wb") as file:
 									file.write(url_doc.content)
-							elif FOLDER != 0:
-								with open(f"{FOLDER}/{name_doc}", "wb") as file:
+							elif _folder != 0:
+								with open(f"{_folder}/{name_doc}", "wb") as file:
 									file.write(url_doc.content)
 							html2 += f'''<div style='margin-bottom: 10px; width: 750px; box-sizing: content-box; background: linear-gradient(to right, #3E608A, #69A3EA); border-radius: 10px; font-family: sans-serif; margin-left: auto; margin-right: auto;'>
 											<audio src='{name_doc}' controls='controls' style='padding: 10px'></audio>
@@ -290,16 +321,21 @@ def dwn_pst(id_, count, _photo=0, _music=0, _document=0, _folder=0, _af=0):
 								</div>
 							</div>'''
 	except KeyboardInterrupt:
-		print(error + "Выход")
+		warn("Выход!")
 		sys.exit(1)
 
-	#соединяем все части html кода
+	#joined all fragments html templates
 	html_join = html1 + html2 + html3
 
-	#если указана папка для сохранения, то файл скачивается в неё
-	if FOLDER == 0:
-		with open(f"Посты_{name}.html", "w", encoding="utf-8") as file:
-			file.write(html_join)
-	elif FOLDER != 0:
-		with open(f"{FOLDER}/Посты_{name}.html", "w", encoding="utf-8") as file:
-			file.write(html_join)
+	try:
+		if _folder == 0:
+			with open(f"Посты_{name}.html", "w", encoding="utf-8") as file:
+				file.write(html_join)
+				succes("Посты сохранены!")
+		elif _folder != 0:
+			with open(f"{_folder}/Посты_{name}.html", "w", encoding="utf-8") as file:
+				file.write(html_join)
+				succes("Посты сохранены!")
+	except KeyboardInterrupt:
+		warn("Выход!")
+		sys.exit(1)

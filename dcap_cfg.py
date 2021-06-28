@@ -1,2 +1,3 @@
-version = "1.0.0.7"
+version = "1.0.1.1"
 author = "blackcat"
+repository = "github.com/blackcatprog/VK-DCaP"
