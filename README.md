@@ -6,6 +6,9 @@
 <img src="https://img.shields.io/badge/Platforms-Windows%20%7C%20Android%20%7C%20Linux-blue" height="20">
 </p>
 
+<video src="video.mkv" controls width="320" height="240">
+</video>
+
 Получите токен от вконтакте:
 1) [Перейдите на этот сайт](vkhost.github.io)
 2) Выберите vk admin, нажмите разрешить
