@@ -13,6 +13,7 @@ def main():
 		print("\nПараметры:")
 		print("-c [количество] - количество скачиваемых сообщений (по умолчанию 20)")
 		print("-id - скачивать фото")
+		print("-q - указать размер скачиваемых изображений: s - 75px, m - 130px, p - 200px, q - 320px, r - 510px, x - 604px, y - 807px, w - 1600px")
 		print("-ad - скачивать голосовые сообщения")
 		print("-md - скачивать музыку")
 		print("-dd - скачивать документы")
@@ -20,6 +21,7 @@ def main():
 		print("-f [название папки] - скачивание в папку")
 		print("-af - скачать все вложения")
 		print("-ul - превращать имена пользователей рядом с сообщенями в ссылки на этих пользователей")
+		print("-ud - скачивать аватарки пользователей в беседе")
 		print("-sm - оформлять музыку")
 		print("-help - краткая документация (вы её сейчас и смотрите :) )")
 		sys.exit(1)
@@ -43,6 +45,8 @@ def main():
 	pars.add_argument("-ul", dest="user_link", help="превращать именами пользователей, отправивших сообщения в ссылки", action="store_true")
 	pars.add_argument("-sm", dest="cover", help="оформлять музыку", action="store_true")
 	pars.add_argument("-all", dest="all_all", help="скачать весь диалог сразу", action="store_true")
+	pars.add_argument("-q", type=str, dest="quality", help="выбрать качество изображений: s - 75px, m - 130px, p - 200px, q - 320px, r - 510px, x - 604px, y - 807px, w - 1600px")
+	pars.add_argument("-ud", dest="avs_dwn", help="скачивать аватарки пользователей в беседе", action="store_true")
 	pars.add_argument("-help", dest="help", help="краткая документация", action="store_true")
 	args = pars.parse_args()
 
@@ -67,7 +71,9 @@ def main():
 			ul_ = args.user_link
 			cv_ = args.cover
 			all_ = args.all_all
-			dwn_dlg(sys.argv[2], count_, _photo=id_, _audio=ad_, _music=md_, _doc=dd_, _sd=sd_, _folder=f_, _af=af_, _ul=ul_, _cv=cv_, _all=all_)
+			q_ = args.quality
+			ud_ = args.avs_dwn
+			dwn_dlg(sys.argv[2], count_, _photo=id_, _audio=ad_, _music=md_, _doc=dd_, _sd=sd_, _folder=f_, _af=af_, _ul=ul_, _cv=cv_, _all=all_, _q=q_, _ud=ud_)
 		elif args.post:
 			if args.count:
 				count_ = args.count
@@ -79,6 +85,6 @@ def main():
 			md_ = args.mus
 			dd_ = args.doc
 			f_ = args.folder
-			lg_ = args.log
 			af_ = args.all
-			dwn_pst(sys.argv[2], count_, _photo=id_, _music=md_, _doc=dd_, _folder=f_, _af=af_)
+			q_ = args.q
+			dwn_pst(sys.argv[2], count_, _photo=id_, _music=md_, _doc=dd_, _folder=f_, _af=af_, _q=q_)

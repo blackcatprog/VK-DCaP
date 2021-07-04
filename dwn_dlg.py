@@ -1,17 +1,14 @@
 import sys
 import vk_api
 from cfg import token
+import cfg
 import requests
 from datetime import datetime as dt
 import os
 import time
 import locale
 from logs import *
-
-#if in cfg don't have token
-if token == "":
-	error("Отсутствует токен!")
-	sys.exit(1)
+import webbrowser
 
 #set local language
 locale.setlocale(locale.LC_ALL, "ru_RU.UTF-8")
@@ -26,14 +23,48 @@ def auth():
 ALL = 1
 
 #main function
-def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0, _af=0, _ul=0, _cv=0, _all=0):
+def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0, _af=0, _ul=0, _cv=0, _all=0, _q="", _ud=0):
 	global getHistory
 	global html2
 	global off
 	html2 = ""
 	off = 0
 	auth()
+
+	SIZE_PHOTO = 0
+
+	if _q == "s":
+		SIZE_PHOTO == 5
+	elif _q == "m":
+		SIZE_PHOTO == 0
+	elif _q == "p":
+		SIZE_PHOTO == 2
+	elif _q == "q":
+		SIZE_PHOTO == 3
+	elif _q == "r":
+		SIZE_PHOTO == 4
+	elif _q == "x":
+		SIZE_PHOTO == 7
+	elif _q == "y":
+		SIZE_PHOTO == 8
+	elif _q == "w":
+		SIZE_PHOTO == 6
+	else:
+		pass
+
+	try:
+		if _folder != 0:
+			os.mkdir(_folder)
+	except FileExistsError:
+		info("Такая папка уже существует!")
+
+	if _af == 1:
+		_photo, _audio, _music, _doc, _sd = 1, 1, 1, 1, 1
 	
+	if count_ > 200:
+		warn("Нельзя скачать более 200 сообщений. Вы можете скачать весь диалог сразу, воспользовавшись параметром -all!")
+		sys.exit(1)
+
 	if _all == 0:
 		try:
 			getHistory = session.method("messages.getHistory", {
@@ -63,7 +94,16 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 		except vk_api.exceptions.ApiError as err:
 			err = str(err)
 			if err[1] == "5":
-				sys.exit(1)
+				error("Ошибка авторизации! Токен неправильный или срок его действия истёк!")
+				vkhost = str(input("Получить токен (y - да, n - нет) : "))
+				if vkhost.strip() == "y":
+					vkhost_ = webbrowser.open("https://vkhost.github.io")
+					sys.exit(1)
+				elif vkhost.strip() == "n":
+					sys.exit(1)
+				else:
+					info("Непонимаю вас!")
+					sys.exit(1)
 			elif err[1:4] == "100":
 				sys.exit(1)
 
@@ -116,8 +156,15 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 				avatar = requests.get(avatar)
 				succes("Аватарка получена!")
 		except KeyError:
-			avatar = "templates/avatar.png"
-			info("Аватрка отсутствует! Установлена аватарка по умолчанию!")
+			avatar = ""
+			info("Аватрка отсутствует!")
+
+		#count posts
+		try:
+			msgs_count = "<center style='font-family: sans-serif; color: #fff; padding: 10px'>Количество сообщений: " + str(getHistory["count"]) + "</center>"
+		except KeyboardInterrupt:
+			warn("Выход!")
+			sys.exit(1)
 
 		try:
 			if _folder == 0:
@@ -166,10 +213,14 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 								<center><a href='{link_user}' target='_blank'><img src='{avatar}' style='height: 100px; border-radius: 100px; margin-top: 20px; box-shadow: 0px 0px 10px #000'></a></center>
 								<center style='padding: 10px; font-size: 20px; color: #fff'>{name}</center>
 								{users}
+								{msgs_count}
 							</div>
-							<div style='width: 750px; box-sizing: padding-box; background: linear-gradient(to right, #3E608A, #69A3EA); border-radius: 20px; margin-left: auto; margin-right: auto'>'''
+							<div style='width: 750px; box-sizing: padding-box; background: linear-gradient(to right, #3E608A, #69A3EA); border-radius: 20px; margin-left: auto; margin-right: auto'>
+							<center style='font-size: 20px; color: #fff; padding: 10px'>Закреплённые сообщения</center>
+							'''
 
-		html2 = ""
+		html2 = '''</div>
+					<div style='width: 750px; box-sizing: padding-box; margin: 10px; background: linear-gradient(to right, #3E608A, #69A3EA); border-radius: 20px; margin-left: auto; margin-right: auto'>'''
 
 		html3 = '''
 						</div>
@@ -178,7 +229,6 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 
 		succes("Html шаблоны созданы!")
 
-		SIZE_PHOTO = 100
 		try:
 			for i in range(int(count_)):
 				try:
@@ -196,9 +246,35 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 				else:
 					user = getUsers[0]["first_name"]
 
+				ava_msg = ""
 				if type_ == "chat":
-					ava_msg = getUsers[0]["photo_50"]
-					ava_msg = f"<div style='padding: 5px; float: left'><img src='{ava_msg}' style='border-radius: 50px; height: 50px'></div>"
+					if _ud == 0:
+						ava_msg = getUsers[0]["photo_50"]
+						ava_msg = f"<div style='padding: 5px; float: left'><img src='{ava_msg}' style='border-radius: 50px; height: 50px'></div>"
+					elif _ud == 1:
+						try:
+							if _folder != 0:
+								os.mkdir(f"{_folder}/avatars_msgs")
+							else:
+								os.mkdir("avatars_msgs")
+						except FileExistsError:
+							pass
+
+						ava_msg_ = getUsers[0]["photo_50"]
+						ava_msg_ = requests.get(ava_msg_)
+						name_ava_msg = getUsers[0]["first_name"] + getUsers[0]["last_name"] + "_avatar"
+						
+						try:
+							if _folder == 0:
+								with open(f"avatars_msgs/{name_ava_msg}.jpg", "wb") as avatar_msg:
+									avatar_msg.write(ava_msg_.content)
+									ava_msg = f"<div style='padding: 5px; float: left'><img src='avatars_msgs/{name_ava_msg}.jpg' style='border-radius: 50px; height: 50px'></div>"
+							elif _folder != 0:
+								with open(f"{_folder}/avatars_msgs/{name_ava_msg}.jpg", "wb") as avatar_msg:
+									avatar_msg.write(ava_msg_.content)
+									ava_msg =  f"<div style='padding: 5px; float: left'><img src='{_folder}/avatars_msgs/{name_ava_msg}.jpg' style='border-radius: 50px; height: 50px'></div>"
+						except AttributeError:
+							pass
 				else:
 					ava_msg = ""
 
@@ -206,23 +282,13 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 					if getHistory["items"][i]["attachments"][0]["type"] == "photo":
 						sms = getHistory["items"][i]["text"]			
 						if _photo == 0:
-							if SIZE_PHOTO == 100:
-								size_photo = str(input("В каком качестве вставлять изображения (s(75px), m(130px), x(604px)): "))
-								if size_photo == "s":
-									SIZE_PHOTO = 5
-								elif size_photo == "m":
-									SIZE_PHOTO = 0
-								elif size_photo == "x":
-									SIZE_PHOTO = 6
-								else:
-									SIZE_PHOTO = 0
 
 							url_photo = getHistory["items"][i]["attachments"][0]["photo"]["sizes"][SIZE_PHOTO]["url"]
 
 							if getHistory["items"][i]["text"] != "":
 								html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 												{sms}<br><br>
-												<img src='{url_photo}' style='height: 200px; border-radius: 20px; box-shadow: 0px 0px 10px #000'>
+												<img src='{url_photo}' style='height: 150px; border-radius: 20px; box-shadow: 0px 0px 10px #000'>
 												<span style='font-size: 10px; color: #000; font-weight: bold; margin-left: 5px'>
 													{user}
 												</span>
@@ -233,7 +299,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 											<br>'''
 							elif getHistory["items"][i]["text"] == "":
 								html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
-												<img src='{url_photo}' style='height: 200px; border-radius: 20px; box-shadow: 0px 0px 10px #000'>
+												<img src='{url_photo}' style='height: 150px; border-radius: 20px; box-shadow: 0px 0px 10px #000'>
 												<span style='font-size: 10px; color: #000; font-weight: bold; margin-left: 5px'>
 													{user}
 												</span>
@@ -243,20 +309,9 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 											</div>
 											<br>'''
 						elif _photo == 1:
-							size_photo = str(input("В каком качестве скачивать изображения (s(75px), m(130px), x(604px)): "))
-							if SIZE_PHOTO == 100:
-								size_photo = str(input("В каком качестве вставлять изображения (s(75px), m(130px), x(604px)): "))
-								if size_photo == "s":
-									SIZE_PHOTO = 5
-								elif size_photo == "m":
-									SIZE_PHOTO = 0
-								elif size_photo == "x":
-									SIZE_PHOTO = 6
-								else:
-									SIZE_PHOTO = 0
 
 							url_photo = requests.get(getHistory["items"][i]["attachments"][0]["photo"]["sizes"][SIZE_PHOTO]["url"])
-							name_photo = f"{(dt.fromtimestamp(getHistory['items'][i]['attachments'][0]['photo']['date'])).strftime('%d-%m-%y~%H-%M-%S')}_{getUsers[0]['first_name']}.jpg"
+							name_photo = f"{(dt.fromtimestamp(getHistory['items'][i]['attachments'][0]['photo']['date'])).strftime('%d-%m-%y~%H-%M-%S')}_{getUsers[0]['first_name']}-{getUsers[0]['last_name']}.jpg"
 							if _folder == 0:
 								with open(name_photo, "wb") as file:
 									file.write(url_photo.content)
@@ -267,7 +322,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 								html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 												{sms}
 												<br>
-												<img src='{name_photo}' style='height: 200px; border-radius: 20px; box-shadow: 0px 0px 10px #000'>
+												<img src='{name_photo}' style='height: 150px; border-radius: 20px; box-shadow: 0px 0px 10px #000'>
 												<span style='font-size: 10px; color: #000; font-weight: bold; margin-left: 5px'>
 													{user}
 												</span>
@@ -278,7 +333,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 											<br>'''
 							elif getHistory["items"][i]["text"] == "":
 								html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
-												<img src='{name_photo}' style='height: 200px; border-radius: 20px;'>
+												<img src='{name_photo}' style='height: 150px; border-radius: 20px;'>
 												<span style='font-size: 10px; color: #000; font-weight: bold; margin-left: 5px'>
 													{user}
 												</span>
@@ -318,7 +373,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 											<br>'''
 						elif _audio == 1:
 							url_audio = requests.get(getHistory["items"][i]["attachments"][0]["audio_message"]["link_mp3"])
-							name_audio = f"{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d-%m-%y~%H-%M-%S')}.mp3"
+							name_audio = f"{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d-%m-%y~%H-%M-%S')}_-{getUsers[0]['first_name']}--{getUsers[0]['last_name']}.mp3"
 							if _folder == 0:
 								with open(name_audio, "wb") as file:
 									file.write(url_audio.content)
@@ -469,7 +524,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 												<br>'''
 						elif _music == 1:
 							url_music = requests.get(getHistory["items"][i]["attachments"][0]["audio"]["url"])
-							name_music = f"{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d-%m-%y~%H-%M-%S')}.mp3"
+							name_music = f"{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d-%m-%y~%H-%M-%S')}_-{getUsers[0]['first_name']}--{getUsers[0]['last_name']}.mp3"
 							if getHistory["items"][i]["text"] != "":		
 								if _cv != 0:
 									photo_music = getHistory['items'][0]['attachments'][0]['audio']['album']['thumb']['photo_135']
@@ -613,8 +668,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 						elif _doc == 1:
 							url_doc = getHistory["items"][i]["attachments"][0]["doc"]["url"]
 							doc_type = requests.get(getHistory["items"][i]["attachments"][0]["doc"]["ext"])
-							name_doc = f"{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d-%m-%y~%H-%M-%S')}.{doc_type}"
-							
+							name_doc = f"{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d-%m-%y~%H-%M-%S')}_-{getUsers[0]['first_name']}--{getUsers[0]['last_name']}.{doc_type}"
 							if getHistory["items"][i]["text"] != "":
 								sms = getHistory["items"][i]["text"]
 								if doc_type == "jpg" or doc_type == "png" or doc_type == "bmp":
@@ -681,7 +735,6 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 											file.write(url_doc.content)
 								elif doc_type == "mp3" or doc_type == "wav" or doc_type == "aac":
 									if getHistory["items"][i]["text"] != "":
-										
 										html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 														{sms}
 														<br>
@@ -714,7 +767,6 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 										<span style='float: keft: margin-left: 10px; font-size: 15px'>{answer} · {vote}</span>
 									</div>'''
 							answers_ += answer_html
-
 						poll = f'''<div style='color: #fff'>
 										<center style='font-weight: bold; font-size: 15px'>ОПРОС</center>
 										<center style='padding: 5px'>Вопрос: {question}</center>
@@ -723,7 +775,6 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 										</div>
 										<span></span>
 									</div>'''
-									
 						html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 630px; background: linear-gradient(100deg, #ED4976, #3E48E3); padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 										{poll}
 										<span style='font-size: 10px; color: #000; font-weight: bold; margin-left: 5px'>
@@ -747,7 +798,6 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 											<span>Собрано {transferred} из {finish_sum}</span><br>
 											<span>Комментарий: {comment}</span>
 										</div>'''
-
 						html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 630px; background: linear-gradient(100deg, #ED4976, #3E48E3); padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 										{money_html}
 										<span style='font-size: 10px; color: #000; font-weight: bold; margin-left: 5px'>
@@ -784,7 +834,6 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 											{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
 										</div>
 										<br>'''
-
 							if _folder == 0:
 								with open(f"{stick_name}", "wb") as file:
 									file.write(sticker.content)
@@ -811,6 +860,8 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 											<span style='weight: bold'>{name_}</span> <span style='weight: liter'>закрепил сообщение {msg_}</span>
 										</div>
 										<br>'''
+							html1 += f'''<div>
+										</div>'''
 					else:
 						sms = getHistory["items"][i]["text"]
 						html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
@@ -942,8 +993,8 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 						avatar = requests.get(avatar)
 						succes("Аватарка получена!")
 				except KeyError:
-					avatar = "templates/avatar.png"
-					info("Аватарка отсутствует! Установлена аватарка по умолчанию!")
+					avatar = ""
+					info("Аватарка отсутствует!")
 
 				try:
 					if _folder == 0:
@@ -958,6 +1009,15 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 				except AttributeError:
 					pass
 				v3 = 1
+
+			#count posts
+			if v4 != 1:
+				try:
+					msgs_count = "<center style='font-family: sans-serif; color: #fff; padding: 10px'>Количество сообщений: " + str(getHistory["count"]) + "</center>"
+				except KeyboardInterrupt:
+					warn("Выход!")
+					sys.exit(1)
+				v4 = 1
 
 			#html components
 			style = '''::-webkit-scrollbar {
@@ -993,6 +1053,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 									<center><a href='{link_user}' target='_blank'><img src='avatar.jpg' style='height: 100px; border-radius: 100px; margin-top: 20px; box-shadow: 0px 0px 10px #000'></a></center>
 									<center style='padding: 10px; font-size: 20px; color: #fff'>{name}</center>
 									{users}
+									{msgs_count}
 								</div>
 								<div style='width: 750px; box-sizing: padding-box; background: linear-gradient(to right, #3E608A, #69A3EA); border-radius: 20px; margin-left: auto; margin-right: auto'>'''
 
@@ -1033,16 +1094,6 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 						if getHistory["items"][i]["attachments"][0]["type"] == "photo":
 							sms = getHistory["items"][i]["text"]			
 							if _photo == 0:
-								if SIZE_PHOTO == 100:
-									size_photo = str(input("В каком качестве вставлять изображения (s(75px), m(130px), x(604px)): "))
-									if size_photo == "s":
-										SIZE_PHOTO = 5
-									elif size_photo == "m":
-										SIZE_PHOTO = 0
-									elif size_photo == "x":
-										SIZE_PHOTO = 6
-									else:
-										SIZE_PHOTO = 0
 
 								url_photo = getHistory["items"][i]["attachments"][0]["photo"]["sizes"][SIZE_PHOTO]["url"]
 
@@ -1070,20 +1121,9 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 												</div>
 												<br>'''
 							elif _photo == 1:
-								size_photo = str(input("В каком качестве скачивать изображения (s(75px), m(130px), x(604px)): "))
-								if SIZE_PHOTO == 100:
-									size_photo = str(input("В каком качестве вставлять изображения (s(75px), m(130px), x(604px)): "))
-									if size_photo == "s":
-										SIZE_PHOTO = 5
-									elif size_photo == "m":
-										SIZE_PHOTO = 0
-									elif size_photo == "x":
-										SIZE_PHOTO = 6
-									else:
-										SIZE_PHOTO = 0
-
+								
 								url_photo = requests.get(getHistory["items"][i]["attachments"][0]["photo"]["sizes"][SIZE_PHOTO]["url"])
-								name_photo = f"{(dt.fromtimestamp(getHistory['items'][i]['attachments'][0]['photo']['date'])).strftime('%d-%m-%y~%H-%M-%S')}_{getUsers[0]['first_name']}.jpg"
+								name_photo = f"{(dt.fromtimestamp(getHistory['items'][i]['attachments'][0]['photo']['date'])).strftime('%d-%m-%y~%H-%M-%S')}_{getUsers[0]['first_name']}--{getUsers[0]['last_name']}.jpg"
 								if _folder == 0:
 									with open(name_photo, "wb") as file:
 										file.write(url_photo.content)
@@ -1145,7 +1185,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 												<br>'''
 							elif _audio == 1:
 								url_audio = requests.get(getHistory["items"][i]["attachments"][0]["audio_message"]["link_mp3"])
-								name_audio = f"{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d-%m-%y~%H-%M-%S')}.mp3"
+								name_audio = f"{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d-%m-%y~%H-%M-%S')}_{getUsers[0]['first_name']}--{getUsers[0]['last_name']}.mp3"
 								if _folder == 0:
 									with open(name_audio, "wb") as file:
 										file.write(url_audio.content)
@@ -1296,7 +1336,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													<br>'''
 							elif _music == 1:
 								url_music = requests.get(getHistory["items"][i]["attachments"][0]["audio"]["url"])
-								name_music = f"{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d-%m-%y~%H-%M-%S')}.mp3"
+								name_music = f"{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d-%m-%y~%H-%M-%S')}_{getUsers[0]['first_name']}--{getUsers[0]['last_name']}.mp3"
 								if getHistory["items"][i]["text"] != "":		
 									if _cv != 0:
 										photo_music = getHistory['items'][0]['attachments'][0]['audio']['album']['thumb']['photo_135']
@@ -1407,8 +1447,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 							sms = getHistory["items"][i]["text"]
 							if _doc == 0:
 								url_doc = getHistory["items"][i]["attachments"][0]["doc"]["url"]
-								if getHistory["items"][i]["text"] != "":
-										
+								if getHistory["items"][i]["text"] != "":		
 									html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 													{sms}
 													<br>
@@ -1424,7 +1463,6 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 												</div>
 												<br>'''
 								elif getHistory["items"][i]["text"] == "":
-									
 									html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 													<a href='{url_doc}'>
 														ДОКУМЕНТ
@@ -1440,16 +1478,14 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 							elif _doc == 1:
 								url_doc = getHistory["items"][i]["attachments"][0]["doc"]["url"]
 								doc_type = requests.get(getHistory["items"][i]["attachments"][0]["doc"]["ext"])
-								name_doc = f"{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d-%m-%y~%H-%M-%S')}.{doc_type}"
-								
+								name_doc = f"{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d-%m-%y~%H-%M-%S')}_{getUsers[0]['first_name']}--{getUsers[0]['last_name']}.{doc_type}"
 								if getHistory["items"][i]["text"] != "":
 									sms = getHistory["items"][i]["text"]
 									if doc_type == "jpg" or doc_type == "png" or doc_type == "bmp":
-										
 										html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 														{sms}
 														<br>
-														<img src='{name_doc}'>
+														<img src='{name_doc}' style='height: 80px'>
 														<span style='font-size: 10px; color: #000; font-weight: bold; margin-left: 5px'>
 															{user}
 														</span>
@@ -1465,7 +1501,6 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 											with open(f"{_folder}/{name_doc}", "wb") as file:
 												file.write(url_doc.content)
 									elif doc_type == "mp3" or doc_type == "wav" or doc_type == "aac":
-											
 											html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 															{sms}
 															<br>
@@ -1487,11 +1522,10 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													file.write(url_doc.content)
 								elif getHistory["items"][i]["text"] == "":
 									if doc_type == "jpg" or doc_type == "png" or doc_type == "bmp":
-										
 										html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 														{sms}
 														<br>
-														<img src='{name_doc}'>
+														<img src='{name_doc}' style='height: 80px'>
 														<span style='font-size: 10px; color: #000; font-weight: bold; margin-left: 5px'>
 															{user}
 														</span>
@@ -1531,7 +1565,6 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 							question = getHistory["items"][i]["attachments"][0]["poll"]["question"]
 							answers = getHistory["items"][i]["attachments"][0]["poll"]["answers"]
 							answers_ = ""
-
 							for j in range(len(answers)):
 								answer = getHistory["items"][i]["attachments"][0]["poll"]["answers"][j]["text"]
 								vote = getHistory["items"][i]["attachments"][0]["poll"]["answers"][j]["votes"]
@@ -1541,7 +1574,6 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 											<span style='float: keft: margin-left: 10px; font-size: 15px'>{answer} · {vote}</span>
 										</div>'''
 								answers_ += answer_html
-
 							poll = f'''<div style='color: #fff'>
 											<center style='font-weight: bold; font-size: 15px'>ОПРОС</center>
 											<center style='padding: 5px'>Вопрос: {question}</center>
@@ -1550,7 +1582,6 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 											</div>
 											<span></span>
 										</div>'''
-										
 							html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 630px; background: linear-gradient(100deg, #ED4976, #3E48E3); padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 											{poll}
 											<span style='font-size: 10px; color: #000; font-weight: bold; margin-left: 5px'>
@@ -1567,14 +1598,12 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 							finish_sum = f"{sum_[:-2:]}.{sum_[-2::]} {getHistory['items'][i]['attachments'][0]['money_request']['total_amount']['currency']['name']}"
 							transferred = getHistory["items"][i]["attachments"][0]["money_request"]["transferred_amount"]["amount"]
 							finish_post = f"{transferred[:-2:]}.{transferred[-2::]} {getHistory['items'][i]['attachments'][0]['money_request']['transferred_amount']['currency']['name']}"
-
 							money_html = f'''<div style='color: #fff'>
 												<span style='font-weight: bold; font-size: 20px'>ДЕНЕЖНЫЙ ЗАПРОС</span><br>
 												<span>Сумма: {finish_sum}</span><br>
 												<span>Собрано {transferred} из {finish_sum}</span><br>
 												<span>Комментарий: {comment}</span>
 											</div>'''
-
 							html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 630px; background: linear-gradient(100deg, #ED4976, #3E48E3); padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 											{money_html}
 											<span style='font-size: 10px; color: #000; font-weight: bold; margin-left: 5px'>
