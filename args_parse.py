@@ -1,8 +1,12 @@
-import argparse
-import sys
-import dcap_cfg
-from dwn_dlg import dwn_dlg
-from dwn_pst import dwn_pst
+try:
+	import argparse
+	import sys
+	import dcap_cfg
+	from dwn_dlg import dwn_dlg
+	from dwn_pst import dwn_pst
+except ModuleNotFoundError:
+	error("Отсутствует(ют) необходимый(е) модуль(и)")
+	sys.exit(1)
 
 def main():
 	def info_():
@@ -14,6 +18,7 @@ def main():
 		print("-c [количество] - количество скачиваемых сообщений (по умолчанию 20)")
 		print("-id - скачивать фото")
 		print("-q - указать размер скачиваемых изображений: s - 75px, m - 130px, p - 200px, q - 320px, r - 510px, x - 604px, y - 807px, w - 1600px")
+		print("-vd - скачивать видео")
 		print("-ad - скачивать голосовые сообщения")
 		print("-md - скачивать музыку")
 		print("-dd - скачивать документы")
@@ -36,6 +41,7 @@ def main():
 	pars.add_argument("-pd", dest="post", help="скачивание постов")
 	pars.add_argument("-c", type=int, dest="count", help="количество постов/диалогов (целое число)")
 	pars.add_argument("-id", dest="img", help="скачивать фото", action="store_true")
+	pars.add_argument("-vd", dest="vid", help="скачивать видео", action="store_true")
 	pars.add_argument("-ad", dest="aud", help="скачивать голосовые сообщения", action="store_true")
 	pars.add_argument("-md", dest="mus", help="скачивать музыку", action="store_true")
 	pars.add_argument("-dd", dest="doc", help="скачивать документы", action="store_true")
@@ -62,6 +68,7 @@ def main():
 			else:
 				count_ = 20
 			id_ = args.img
+			vd_ = args.vid
 			ad_ = args.aud
 			md_ = args.mus
 			dd_ = args.doc
@@ -73,7 +80,7 @@ def main():
 			all_ = args.all_all
 			q_ = args.quality
 			ud_ = args.avs_dwn
-			dwn_dlg(sys.argv[2], count_, _photo=id_, _audio=ad_, _music=md_, _doc=dd_, _sd=sd_, _folder=f_, _af=af_, _ul=ul_, _cv=cv_, _all=all_, _q=q_, _ud=ud_)
+			dwn_dlg(sys.argv[2], count_, _photo=id_, _video=vd_, _audio=ad_, _music=md_, _doc=dd_, _sd=sd_, _folder=f_, _af=af_, _ul=ul_, _cv=cv_, _all=all_, _q=q_, _ud=ud_)
 		elif args.post:
 			if args.count:
 				count_ = args.count
@@ -86,5 +93,5 @@ def main():
 			dd_ = args.doc
 			f_ = args.folder
 			af_ = args.all
-			q_ = args.q
+			q_ = args.quality
 			dwn_pst(sys.argv[2], count_, _photo=id_, _music=md_, _doc=dd_, _folder=f_, _af=af_, _q=q_)

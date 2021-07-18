@@ -1,5 +1,9 @@
-from colorama import *
-import time
+try:
+	from colorama import *
+	import time
+except ModuleNotFoundError:
+	error("Отсутствует(ют) необходимый(е) модуль(и)")
+	sys.exit(1)
 
 def info(text):
 	print(f"{Style.BRIGHT}{time.strftime('%H:%M:%S')} - [INFO] - {text}{Style.RESET_ALL}")

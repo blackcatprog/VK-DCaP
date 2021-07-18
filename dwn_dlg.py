@@ -1,14 +1,18 @@
-import sys
-import vk_api
-from cfg import token
-import cfg
-import requests
-from datetime import datetime as dt
-import os
-import time
-import locale
-from logs import *
-import webbrowser
+try:
+	import sys
+	import vk_api
+	from cfg import token
+	import cfg
+	import requests
+	from datetime import datetime as dt
+	import os
+	import time
+	import locale
+	from logs import *
+	import shutil
+except ModuleNotFoundError:
+	error("Отсутствует(ют) необходимый(е) модуль(и)")
+	sys.exit(1)
 
 #set local language
 locale.setlocale(locale.LC_ALL, "ru_RU.UTF-8")
@@ -23,7 +27,7 @@ def auth():
 ALL = 1
 
 #main function
-def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0, _af=0, _ul=0, _cv=0, _all=0, _q="", _ud=0):
+def dwn_dlg(id_, count_, _photo=0, _video=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0, _af=0, _ul=0, _cv=0, _all=0, _q="", _ud=0):
 	global getHistory
 	global html2
 	global off
@@ -59,7 +63,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 		info("Такая папка уже существует!")
 
 	if _af == 1:
-		_photo, _audio, _music, _doc, _sd = 1, 1, 1, 1, 1
+		_photo, _video, _audio, _music, _doc, _sd = 1, 1, 1, 1, 1, 1
 	
 	if count_ > 200:
 		warn("Нельзя скачать более 200 сообщений. Вы можете скачать весь диалог сразу, воспользовавшись параметром -all!")
@@ -95,17 +99,21 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 			err = str(err)
 			if err[1] == "5":
 				error("Ошибка авторизации! Токен неправильный или срок его действия истёк!")
-				vkhost = str(input("Получить токен (y - да, n - нет) : "))
-				if vkhost.strip() == "y":
-					vkhost_ = webbrowser.open("https://vkhost.github.io")
-					sys.exit(1)
-				elif vkhost.strip() == "n":
-					sys.exit(1)
-				else:
-					info("Непонимаю вас!")
-					sys.exit(1)
 			elif err[1:4] == "100":
 				sys.exit(1)
+
+		#
+		#
+		#
+		#
+		#
+		#
+		#
+		#
+		#
+		#
+		#
+		print(getHistory)
 
 		succes("Получена история диалога!")
 
@@ -278,6 +286,13 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 				else:
 					ava_msg = ""
 
+				edit_msg = ""
+				if "update_time" in getHistory["items"][i]:
+					edit_msg = (dt.fromtimestamp(getHistory["items"][i]["update_time"])).strftime('%d %B %Y %H:%M:%S')
+
+				if edit_msg != "":
+					edit_msg = f"(ред. {edit_msg})"
+
 				if len(getHistory["items"][i]["attachments"]) >= 1:
 					if getHistory["items"][i]["attachments"][0]["type"] == "photo":
 						sms = getHistory["items"][i]["text"]			
@@ -294,7 +309,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 												</span>
 											</div>
 											<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-												{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+												{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 											</div>
 											<br>'''
 							elif getHistory["items"][i]["text"] == "":
@@ -305,7 +320,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 												</span>
 											</div>
 											<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-												{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+												{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 											</div>
 											<br>'''
 						elif _photo == 1:
@@ -328,7 +343,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 												</span>
 											</div>
 											<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-												{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+												{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 											</div>
 											<br>'''
 							elif getHistory["items"][i]["text"] == "":
@@ -339,7 +354,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 												</span>
 											</div>
 											<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-												{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+												{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 											</div>
 											<br>'''
 					elif getHistory["items"][i]["attachments"][0]["type"] == "audio_message":
@@ -357,7 +372,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 												</span>
 											</div>
 											<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-												{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+												{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 											</div>
 											<br>'''
 							elif getHistory["items"][i]["text"] == "":
@@ -368,7 +383,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 												</span>
 											</div>
 											<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-												{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+												{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 											</div>
 											<br>'''
 						elif _audio == 1:
@@ -391,7 +406,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 												</span>
 											</div>
 											<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-												{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+												{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 											</div>
 											<br>'''
 							elif getHistory["items"][i]["text"] == "":
@@ -402,7 +417,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 												</span>
 											</div>
 											<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-												{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+												{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 											</div>
 											<br>'''
 					elif getHistory["items"][i]["attachments"][0]["type"] == "audio":
@@ -439,12 +454,18 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													file.write(photo_music.content)
 												photo_music = title
 									audio = f'''<div style=''>
-													<img src='{photo_music}' style='border-radius: 20px'>
-													<span style=''>{audio_title} {explicit}</span>
-													<span style=''>{artist}</span>
-													<span style=''>{album}</span>
-													<audio src='{url_music}' controls='controls'></audio>
-												</div>'''
+												<div style='padding: 10px; margin: auto auto auto 50px'>
+													<div style='padding: 10px; margin: -20px auto auto -70px'>
+														<img src='{photo_music}.jpg' style='border-radius: 10px; box-shadow: 0px 0px 10px #000'>
+													</div>
+													<div style='margin: -80px auto auto 80px; padding: 5px;'>
+														<span style=''>Трек: {audio_title}</span><br>
+														<span style=''>Артист: {artist}</span><br>
+														<span style=''>Альбом: {album}</span><br>
+													</div>
+												</div>
+												<audio src='{url_music}' controls='controls' style='padding: 5px'></audio>
+											</div>'''
 
 									html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 													{audio}
@@ -453,7 +474,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													</span>
 												</div>
 												<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 												</div>
 												<br>'''
 								else:
@@ -467,7 +488,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													</span>
 												</div>
 												<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 												</div>
 												<br>'''
 							elif getHistory["items"][i]["text"] == "":	
@@ -493,12 +514,18 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													file.write(photo_music.content)
 												photo_music = title
 									audio = f'''<div style=''>
-													<img src='{photo_music}' style='border-radius: 20px'>
-													<span style=''>{audio_title} {explicit}</span>
-													<span style=''>{artist}</span>
-													<span style=''>{album}</span>
-													<audio src='{url_music}' controls='controls'></audio>
-												</div>'''
+												<div style='padding: 10px; margin: auto auto auto 50px'>
+													<div style='padding: 10px; margin: -20px auto auto -70px'>
+														<img src='{photo_music}.jpg' style='border-radius: 10px; box-shadow: 0px 0px 10px #000'>
+													</div>
+													<div style='margin: -80px auto auto 80px; padding: 5px;'>
+														<span style=''>Трек: {audio_title}</span><br>
+														<span style=''>Артист: {artist}</span><br>
+														<span style=''>Альбом: {album}</span><br>
+													</div>
+												</div>
+												<audio src='{url_music}' controls='controls' style='padding: 5px'></audio>
+											</div>'''
 
 									html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 													{audio}
@@ -507,7 +534,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													</span>
 												</div>
 												<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 												</div>
 												<br>'''
 								else:
@@ -519,7 +546,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													</span>
 												</div>
 												<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 												</div>
 												<br>'''
 						elif _music == 1:
@@ -548,12 +575,18 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													file.write(photo_music.content)
 												photo_music = title
 									audio = f'''<div style=''>
-													<img src='{photo_music}' style='border-radius: 20px'>
-													<span style=''>{audio_title} {explicit}</span>
-													<span style=''>{artist}</span>
-													<span style=''>{album}</span>
-													<audio src='{url_music}' controls='controls'></audio>
-												</div>'''
+												<div style='padding: 10px; margin: auto auto auto 50px'>
+													<div style='padding: 10px; margin: -20px auto auto -70px'>
+														<img src='{photo_music}.jpg' style='border-radius: 10px; box-shadow: 0px 0px 10px #000'>
+													</div>
+													<div style='margin: -80px auto auto 80px; padding: 5px;'>
+														<span style=''>Трек: {audio_title}</span><br>
+														<span style=''>Артист: {artist}</span><br>
+														<span style=''>Альбом: {album}</span><br>
+													</div>
+												</div>
+												<audio src='{url_music}' controls='controls' style='padding: 5px'></audio>
+											</div>'''
 
 									html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 													{audio}
@@ -562,7 +595,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													</span>
 												</div>
 												<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 												</div>
 												<br>'''
 								else:
@@ -576,7 +609,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													</span>
 												</div>
 												<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 												</div>
 												<br>'''
 							elif getHistory["items"][i]["text"] == "":
@@ -602,12 +635,18 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													file.write(photo_music.content)
 												photo_music = title
 									audio = f'''<div style=''>
-													<img src='{photo_music}' style='border-radius: 20px'>
-													<span style=''>{audio_title} {explicit}</span>
-													<span style=''>{artist}</span>
-													<span style=''>{album}</span>
-													<audio src='{url_music}' controls='controls'></audio>
-												</div>'''
+												<div style='padding: 10px; margin: auto auto auto 50px'>
+													<div style='padding: 10px; margin: -20px auto auto -70px'>
+														<img src='{photo_music}.jpg' style='border-radius: 10px; box-shadow: 0px 0px 10px #000'>
+													</div>
+													<div style='margin: -80px auto auto 80px; padding: 5px;'>
+														<span style=''>Трек: {audio_title}</span><br>
+														<span style=''>Артист: {artist}</span><br>
+														<span style=''>Альбом: {album}</span><br>
+													</div>
+												</div>
+												<audio src='{url_music}' controls='controls' style='padding: 5px'></audio>
+											</div>'''
 
 									html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 													{audio}
@@ -616,7 +655,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													</span>
 												</div>
 												<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 												</div>
 												<br>'''
 								else:
@@ -628,7 +667,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													</span>
 												</div>
 												<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 												/div>
 												<br>'''
 					elif getHistory["items"][i]["attachments"][0]["type"] == "doc":
@@ -648,7 +687,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 												</span>
 											</div>
 											<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-												{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+												{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 											</div>
 											<br>'''
 							elif getHistory["items"][i]["text"] == "":
@@ -662,7 +701,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 												</span>
 											</div>
 											<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-												{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+												{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 											</div>
 											<br>'''
 						elif _doc == 1:
@@ -682,7 +721,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													</span>
 												</div>
 												<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 												</div>
 												<br>'''
 									if _folder == 0:
@@ -702,7 +741,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 														</span>
 													</div>
 													<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-														{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+														{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 													</div>
 													<br>'''
 
@@ -724,7 +763,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													</span>
 												</div>
 												<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 												</div>
 												<br>'''
 									if _folder == 0:
@@ -744,7 +783,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 														</span>
 													</div>
 													<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-														{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+														{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 													</div>
 													<br>'''
 										if _folder == 0:
@@ -782,7 +821,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 										</span>
 									</div>
 									<div style='display: block; padding: 5px; font-size: 10px;font-weight: bold; margin-left: 5px'>
-										{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+										{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 									</div>
 									<br>'''
 					elif getHistory["items"][i]["attachments"][0]["type"] == "money_request":
@@ -805,7 +844,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 										</span>
 									</div>
 									<div style='display: block; padding: 5px; font-size: 10px;font-weight: bold; margin-left: 5px'>
-										{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+										{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 									</div>
 									<br>'''
 					elif "sticker" in getHistory["items"][i]["attachments"][0]:
@@ -818,7 +857,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 											</span>
 										</div>
 										<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold'>
-											{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+											{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 										</div>
 										<br>'''
 						else:
@@ -831,7 +870,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 											</span>
 										</div>
 										<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold'>
-											{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+											{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 										</div>
 										<br>'''
 							if _folder == 0:
@@ -848,7 +887,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 							if "message" in getHistory["items"][i]:
 								msg_ = getHistory["items"][i]["action"]["message"]
 							html2 += f'''<div style='display: block; text-align: center; padding: 5px; margin: 0 auto'>
-											<span style='weight: bold'>{name_}</span> <span style='weight: liter'>открепил сообщение {msg_}</span>
+											<span style='font-weight: bold'>{name_}</span> <span style='font-weight: liter'>открепил сообщение \"{msg_}\"</span>
 										</div>
 										<br>'''
 						elif getHistory["items"][i]["action"]["type"] == "chat_pin_message":
@@ -857,11 +896,17 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 							if "message" in getHistory["items"][i]:
 								msg_ = getHistory["items"][i]["action"]["message"]
 							html2 += f'''<div style='display: block; text-align: center; padding: 5px; margin: 0 auto'>
-											<span style='weight: bold'>{name_}</span> <span style='weight: liter'>закрепил сообщение {msg_}</span>
+											<span style='font-weight: bold'>{name_}</span> <span style='font-weight: liter'>закрепил сообщение \"{msg_}\"</span>
 										</div>
 										<br>'''
 							html1 += f'''<div>
 										</div>'''
+						elif getHistory["items"][i]["action"]["type"] == "chat_kick_user":
+							name_ = getUsers[0]["first_name"] + " " + getUsers[0]["last_name"]
+							html2 += f'''<div style='display: block; text-align: center; padding: 5px; margin: 0 auto'>
+											<span style='font-weight: bold'>{name_}</span> <span style='font-weight: liter'>покинул(а) чат</span>
+										</div>
+										<br>'''
 					else:
 						sms = getHistory["items"][i]["text"]
 						html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
@@ -871,7 +916,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 										</span>
 									</div>
 									<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold'>
-										{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+										{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 									</div>
 									<br>'''
 
@@ -943,6 +988,13 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 			if len(getHistory["items"]) < count_:
 				warn(f"В диалоге нет {count_} сообщений!")
 				sys.exit(1)
+
+			edit_msg = ""
+			if "update_time" in getHistory["items"][i]:
+				edit_msg = (dt.fromtimestamp(getHistory["items"][i]["update_time"])).strftime('%d %B %Y %H:%M:%S')
+
+			if edit_msg != "":
+				edit_msg = f"(ред. {edit_msg})"
 
 			type_ = getHistory["conversations"][0]["peer"]["type"]
 			if v1 != 1:
@@ -1106,7 +1158,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													</span>
 												</div>
 												<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 												</div>
 												<br>'''
 								elif getHistory["items"][i]["text"] == "":
@@ -1117,7 +1169,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													</span>
 												</div>
 												<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 												</div>
 												<br>'''
 							elif _photo == 1:
@@ -1140,7 +1192,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													</span>
 												</div>
 												<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 												</div>
 												<br>'''
 								elif getHistory["items"][i]["text"] == "":
@@ -1151,7 +1203,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													</span>
 												</div>
 												<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 												</div>
 												<br>'''
 						elif getHistory["items"][i]["attachments"][0]["type"] == "audio_message":
@@ -1169,7 +1221,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													</span>
 												</div>
 												<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 												</div>
 												<br>'''
 								elif getHistory["items"][i]["text"] == "":
@@ -1180,7 +1232,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													</span>
 												</div>
 												<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 												</div>
 												<br>'''
 							elif _audio == 1:
@@ -1203,7 +1255,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													</span>
 												</div>
 												<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 												</div>
 												<br>'''
 								elif getHistory["items"][i]["text"] == "":
@@ -1214,7 +1266,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													</span>
 												</div>
 												<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 												</div>
 												<br>'''
 						elif getHistory["items"][i]["attachments"][0]["type"] == "audio":
@@ -1251,12 +1303,18 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 														file.write(photo_music.content)
 													photo_music = title
 										audio = f'''<div style=''>
-														<img src='{photo_music}' style='border-radius: 20px'>
-														<span style=''>{audio_title} {explicit}</span>
-														<span style=''>{artist}</span>
-														<span style=''>{album}</span>
-														<audio src='{url_music}' controls='controls'></audio>
-													</div>'''
+												<div style='padding: 10px; margin: auto auto auto 50px'>
+													<div style='padding: 10px; margin: -20px auto auto -70px'>
+														<img src='{photo_music}.jpg' style='border-radius: 10px; box-shadow: 0px 0px 10px #000'>
+													</div>
+													<div style='margin: -80px auto auto 80px; padding: 5px;'>
+														<span style=''>Трек: {audio_title}</span><br>
+														<span style=''>Артист: {artist}</span><br>
+														<span style=''>Альбом: {album}</span><br>
+													</div>
+												</div>
+												<audio src='{url_music}' controls='controls' style='padding: 5px'></audio>
+											</div>'''
 
 										html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 														{audio}
@@ -1265,7 +1323,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 														</span>
 													</div>
 													<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-														{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+														{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 													</div>
 													<br>'''
 									else:
@@ -1279,7 +1337,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 														</span>
 													</div>
 													<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-														{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+														{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 													</div>
 													<br>'''
 								elif getHistory["items"][i]["text"] == "":	
@@ -1305,12 +1363,18 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 														file.write(photo_music.content)
 													photo_music = title
 										audio = f'''<div style=''>
-														<img src='{photo_music}' style='border-radius: 20px'>
-														<span style=''>{audio_title} {explicit}</span>
-														<span style=''>{artist}</span>
-														<span style=''>{album}</span>
-														<audio src='{url_music}' controls='controls'></audio>
-													</div>'''
+												<div style='padding: 10px; margin: auto auto auto 50px'>
+													<div style='padding: 10px; margin: -20px auto auto -70px'>
+														<img src='{photo_music}.jpg' style='border-radius: 10px; box-shadow: 0px 0px 10px #000'>
+													</div>
+													<div style='margin: -80px auto auto 80px; padding: 5px;'>
+														<span style=''>Трек: {audio_title}</span><br>
+														<span style=''>Артист: {artist}</span><br>
+														<span style=''>Альбом: {album}</span><br>
+													</div>
+												</div>
+												<audio src='{url_music}' controls='controls' style='padding: 5px'></audio>
+											</div>'''
 
 										html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 														{audio}
@@ -1319,7 +1383,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 														</span>
 													</div>
 													<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-														{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+														{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 													</div>
 													<br>'''
 									else:
@@ -1331,7 +1395,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 														</span>
 													</div>
 													<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-														{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+														{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 													</div>
 													<br>'''
 							elif _music == 1:
@@ -1360,12 +1424,18 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 														file.write(photo_music.content)
 													photo_music = title
 										audio = f'''<div style=''>
-														<img src='{photo_music}' style='border-radius: 20px'>
-														<span style=''>{audio_title} {explicit}</span>
-														<span style=''>{artist}</span>
-														<span style=''>{album}</span>
-														<audio src='{url_music}' controls='controls'></audio>
-													</div>'''
+												<div style='padding: 10px; margin: auto auto auto 50px'>
+													<div style='padding: 10px; margin: -20px auto auto -70px'>
+														<img src='{photo_music}.jpg' style='border-radius: 10px; box-shadow: 0px 0px 10px #000'>
+													</div>
+													<div style='margin: -80px auto auto 80px; padding: 5px;'>
+														<span style=''>Трек: {audio_title}</span><br>
+														<span style=''>Артист: {artist}</span><br>
+														<span style=''>Альбом: {album}</span><br>
+													</div>
+												</div>
+												<audio src='{url_music}' controls='controls' style='padding: 5px'></audio>
+											</div>'''
 
 										html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 														{audio}
@@ -1374,7 +1444,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 														</span>
 													</div>
 													<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-														{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+														{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 													</div>
 													<br>'''
 									else:
@@ -1388,7 +1458,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 														</span>
 													</div>
 													<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-														{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+														{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 													</div>
 													<br>'''
 								elif getHistory["items"][i]["text"] == "":
@@ -1414,12 +1484,18 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 														file.write(photo_music.content)
 													photo_music = title
 										audio = f'''<div style=''>
-														<img src='{photo_music}' style='border-radius: 20px'>
-														<span style=''>{audio_title} {explicit}</span>
-														<span style=''>{artist}</span>
-														<span style=''>{album}</span>
-														<audio src='{url_music}' controls='controls'></audio>
-													</div>'''
+												<div style='padding: 10px; margin: auto auto auto 50px'>
+													<div style='padding: 10px; margin: -20px auto auto -70px'>
+														<img src='{photo_music}.jpg' style='border-radius: 10px; box-shadow: 0px 0px 10px #000'>
+													</div>
+													<div style='margin: -80px auto auto 80px; padding: 5px;'>
+														<span style=''>Трек: {audio_title}</span><br>
+														<span style=''>Артист: {artist}</span><br>
+														<span style=''>Альбом: {album}</span><br>
+													</div>
+												</div>
+												<audio src='{url_music}' controls='controls' style='padding: 5px'></audio>
+											</div>'''
 
 										html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 														{audio}
@@ -1428,7 +1504,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 														</span>
 													</div>
 													<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-														{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+														{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 													</div>
 													<br>'''
 									else:
@@ -1440,7 +1516,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 														</span>
 													</div>
 													<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-														{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+														{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 													</div>
 													<br>'''
 						elif getHistory["items"][i]["attachments"][0]["type"] == "doc":
@@ -1459,7 +1535,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													</span>
 												</div>
 												<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 												</div>
 												<br>'''
 								elif getHistory["items"][i]["text"] == "":
@@ -1472,7 +1548,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 													</span>
 												</div>
 												<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+													{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 												</div>
 												<br>'''
 							elif _doc == 1:
@@ -1491,7 +1567,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 														</span>
 													</div>
 													<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-														{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+														{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 													</div>
 													<br>'''
 										if _folder == 0:
@@ -1510,7 +1586,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 															</span>
 														</div>
 														<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-															{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+															{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 														</div>
 														<br>'''
 
@@ -1531,7 +1607,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 														</span>
 													</div>
 													<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-														{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+														{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 													</div>
 													<br>'''
 										if _folder == 0:
@@ -1552,7 +1628,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 															</span>
 														</div>
 														<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold; margin-left: 5px'>
-															{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+															{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 														</div>
 														<br>'''
 											if _folder == 0:
@@ -1589,7 +1665,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 											</span>
 										</div>
 										<div style='display: block; padding: 5px; font-size: 10px;font-weight: bold; margin-left: 5px'>
-											{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+											{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 										</div>
 										<br>'''
 						elif getHistory["items"][i]["attachments"][0]["type"] == "money_request":
@@ -1611,7 +1687,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 											</span>
 										</div>
 										<div style='display: block; padding: 5px; font-size: 10px;font-weight: bold; margin-left: 5px'>
-											{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+											{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 										</div>
 										<br>'''
 					else:
@@ -1642,7 +1718,7 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 											</span>
 										</div>
 										<div style='display: block; padding: 5px; font-size: 10px; font-weight: bold'>
-											{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')}
+											{(dt.fromtimestamp(getHistory['items'][i]['date'])).strftime('%d %B %Y %H:%M:%S')} {edit_msg}
 										</div>
 										<br>'''
 
@@ -1668,3 +1744,5 @@ def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0,
 			except KeyboardInterrupt:
 				warn("Выход!")
 				sys.exit(1)
+
+	shutil.rmtree("__pycache__")

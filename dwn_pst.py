@@ -1,12 +1,17 @@
-import sys
-import vk_api
-from cfg import token
-import requests
-from datetime import datetime as dt
-import os
-import time
-import locale
-from logs import *
+try:
+	import sys
+	import vk_api
+	from cfg import token
+	import requests
+	from datetime import datetime as dt
+	import os
+	import time
+	import locale
+	from logs import *
+	import shutil
+except ModuleNotFoundError:
+	error("Отсутствует(ют) необходимый(е) модуль(и)")
+	sys.exit(1)
 
 #function for authorization in vk.com
 def auth():
@@ -79,16 +84,7 @@ def dwn_pst(id_, count_, _photo=0, _music=0, _doc=0, _folder=0, _af=0, _q=""):
 	except vk_api.exceptions.ApiError as err:
 		err = str(err)
 		if err[1] == "5":
-				error("Ошибка авторизации! Токен неправильный или срок его действия истёк!")
-				vkhost = str(input("Получить токен (y - да, n - нет) : "))
-				if vkhost.strip() == "y":
-					vkhost_ = webbrowser.open("https://vkhost.github.io")
-					sys.exit(1)
-				elif vkhost.strip() == "n":
-					sys.exit(1)
-				else:
-					info("Непонимаю вас!")
-					sys.exit(1)
+			error("Ошибка авторизации! Токен неправильный или срок его действия истёк!")
 		elif err[1:4] == "100":
 			error("Неправильный id пользователя/группы")
 			sys.exit(1)
@@ -354,3 +350,5 @@ def dwn_pst(id_, count_, _photo=0, _music=0, _doc=0, _folder=0, _af=0, _q=""):
 	except KeyboardInterrupt:
 		warn("Выход!")
 		sys.exit(1)
+
+	shutil.rmtree("__pycache__")
