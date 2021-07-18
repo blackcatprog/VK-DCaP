@@ -27,7 +27,7 @@ def auth():
 ALL = 1
 
 #main function
-def dwn_dlg(id_, count_, _photo=0, _video=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0, _af=0, _ul=0, _cv=0, _all=0, _q="", _ud=0):
+def dwn_dlg(id_, count_, _photo=0, _audio=0, _music=0, _doc=0, _sd=0, _folder=0, _af=0, _ul=0, _cv=0, _all=0, _q="", _ud=0):
 	global getHistory
 	global html2
 	global off
@@ -63,7 +63,7 @@ def dwn_dlg(id_, count_, _photo=0, _video=0, _audio=0, _music=0, _doc=0, _sd=0, 
 		info("Такая папка уже существует!")
 
 	if _af == 1:
-		_photo, _video, _audio, _music, _doc, _sd = 1, 1, 1, 1, 1, 1
+		_photo, _audio, _music, _doc, _sd = 1, 1, 1, 1, 1
 	
 	if count_ > 200:
 		warn("Нельзя скачать более 200 сообщений. Вы можете скачать весь диалог сразу, воспользовавшись параметром -all!")
@@ -101,19 +101,6 @@ def dwn_dlg(id_, count_, _photo=0, _video=0, _audio=0, _music=0, _doc=0, _sd=0, 
 				error("Ошибка авторизации! Токен неправильный или срок его действия истёк!")
 			elif err[1:4] == "100":
 				sys.exit(1)
-
-		#
-		#
-		#
-		#
-		#
-		#
-		#
-		#
-		#
-		#
-		#
-		print(getHistory)
 
 		succes("Получена история диалога!")
 
