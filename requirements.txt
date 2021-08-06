@@ -1,0 +1,13 @@
+beautifulsoup4
+certifi
+charset-normalizer
+colorama
+idna
+Pillow
+requests
+six
+soupsieve
+speedtest
+urllib3
+vk-api
+wget

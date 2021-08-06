@@ -1,15 +1,11 @@
-import sys
-from args_parse import *
-from logs import *
-from urllib.request import urlopen
-
-#check interbet connection
 try:
-	url = urlopen("https://google.com")
-except Exception:
-	error("Нет подключения к интернету!")
+	import sys
+	from args_parse import *
+	from logs import *
+except ModuleNotFoundError:
+	error("Отсутствует(ют) необходимый(е) модуль(и)")
 	sys.exit(1)
-
+	
 try:
 	if __name__ == "__main__":
 		main()
