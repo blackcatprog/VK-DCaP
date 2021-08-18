@@ -1,5 +1,5 @@
 <p align="center"><img src="logo.png" height="120"></p>
-<h1 align="center">VK-DCaP</h1>
+<h1 align="center">VK-DCaP (Разработка завершена)</h1>
 <p align="center">
 <a href="https://github.com/blackcatprog/VK-DCaP/releases"><img src="https://img.shields.io/github/v/release/blackcatprog/VK-DCaP?color=important"></a>
 <a href="https://github.com/blackcatprog/VK-DCaP/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-green" height="20"></a>
