@@ -2,7 +2,7 @@ try:
 	try:
 		import sys
 		import vk_api
-		from cfg import token
+		from token import token
 		from logs import *
 		import os
 		import requests
@@ -11,7 +11,7 @@ try:
 		import shutil
 	except (ModuleNotFoundError, ImportError) as module_error:
 		mdl = str(module_error).split("'")[1]
-		error(f"Отсутствует необходимый модуль {mdl}")
+		error(f"Отсутствует необходимый модуль {mdl}!")
 		sys.exit(1)
 
 	#set local language
@@ -159,9 +159,6 @@ try:
 				avatar = ""
 				info("Аватрка отсутствует!")
 
-			#count messages
-			msgs_count = "<center style='font-family: sans-serif; color: #fff; padding: 10px'>Количество сообщений: " + str(getHistory["count"]) + "</center>"
-
 			#download avatar
 			if avatar != "":
 				try:
@@ -179,23 +176,23 @@ try:
 
 			#html templates
 			style = '''::-webkit-scrollbar {
-					width: 12px;
-				}
-						 
-				::-webkit-scrollbar-track {
-						background-color: rgba(0, 0, 0, 0.3)
-				}
-						 
-				::-webkit-scrollbar-thumb {
-					-webkit-border: 1px #fff;
-					border-radius: 20px;
-					background-color: #fff;
-					-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
-				}
+		width: 12px;
+	}
+			 
+	::-webkit-scrollbar-track {
+			background-color: rgba(0, 0, 0, 0.3)
+	}
+			 
+	::-webkit-scrollbar-thumb {
+		-webkit-border: 1px #fff;
+		border-radius: 20px;
+		background-color: #fff;
+		-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
+	}
 
-				* {
-					font-family: sans-serif;
-				}'''
+	* {
+		font-family: sans-serif;
+	}'''
 
 			if avatar != "":
 				ava = f"<img src='{avatar}' style='height: 100px; border-radius: 100px; margin-top: 20px; box-shadow: 0px 0px 10px #000'>"
@@ -203,28 +200,31 @@ try:
 			if avatar == "":
 				ava = "<div style='display: inline-block; margin-top: 10px; width: 100px; height: 100px; border-radius: 200px; background: linear-gradient(to right, #00c6ff, #0072ff); box-shadow: 0px 0px 10px #000;'></div>"
 
+			#count messages
+			msgs_count = "<center style='font-family: sans-serif; color: #fff; padding: 10px'>Количество сообщений: " + str(getHistory["count"]) + "</center>"
+
 			html1 = f'''<!DOCTYPE html>
-				<html>
-					<head>
-						<meta charset="utf-8">
-						<title>{name}</title>
-						<style>
-						{style}
-						</style>
-					</head>
-					<body style='background-color: #333;'>
-						<div style='width: 750px; margin: 10px auto 10px auto; background: linear-gradient(to right, #3E608A, #69A3EA); border-radius: 20px'>
-							<center><a href='{link_user}' target='_blank'>{ava}</a></center>
-							<center style='padding: 10px; font-size: 20px; color: #fff'>{name}</center>
-							{users}
-							{msgs_count}
-						</div>
-						<div style='width: 750px; box-sizing: padding-box; background: linear-gradient(to right, #3E608A, #69A3EA); border-radius: 20px; margin-left: auto; margin-right: auto'>
-						<center style='font-size: 20px; color: #fff; padding: 10px'>Закреплённые сообщения</center>
-						'''
+	<html>
+		<head>
+			<meta charset="utf-8">
+			<title>{name}</title>
+			<style>
+			{style}
+			</style>
+		</head>
+		<body style='background-color: #333;'>
+			<div style='width: 750px; margin: 10px auto 10px auto; background: linear-gradient(to right, #3E608A, #69A3EA); border-radius: 20px'>
+				<center><a href='{link_user}' target='_blank'>{ava}</a></center>
+				<center style='padding: 10px; font-size: 20px; color: #fff'>{name}</center>
+				{users}
+				{msgs_count}
+			</div>
+			<div style='width: 750px; box-sizing: padding-box; background: linear-gradient(to right, #3E608A, #69A3EA); border-radius: 20px; margin-left: auto; margin-right: auto'>
+			<center style='font-size: 20px; color: #fff; padding: 10px'>Закреплённые сообщения</center>
+			'''
 
 			html2 = '''</div>
-				<div style='width: 750px; box-sizing: padding-box; margin: 10px; background: linear-gradient(to right, #3E608A, #69A3EA); border-radius: 20px; margin-left: auto; margin-right: auto'>'''
+		<div style='width: 750px; box-sizing: padding-box; margin: 10px; background: linear-gradient(to right, #3E608A, #69A3EA); border-radius: 20px; margin-left: auto; margin-right: auto'>'''
 
 			html3 = '''
 					</div>
@@ -287,20 +287,16 @@ try:
 					else:
 						ava_msg = ""
 
+					#get time edition message
 					edit_msg = ""
 					if "update_time" in getHistory["items"][i]:
-						edit_msg = (dt.fromtimestamp(getHistory["items"][i]["update_time"])).strftime('%d %B %Y %H:%M:%S')
-
-					if edit_msg != "":
-						edit_msg = f"(ред. {edit_msg})"
+						edit_msg = f"(ред. {(dt.fromtimestamp(getHistory['items'][i]['update_time']).strftime('%d %B %Y %H:%M:%S')}"
 
 					if len(getHistory["items"][i]["attachments"]) >= 1:
 						if getHistory["items"][i]["attachments"][0]["type"] == "photo":
 							sms = getHistory["items"][i]["text"]			
 							if _photo == 0:
-
 								url_photo = getHistory["items"][i]["attachments"][0]["photo"]["sizes"][SIZE_PHOTO]["url"]
-
 								if getHistory["items"][i]["text"] != "":
 									html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 													{sms}<br><br>
@@ -359,14 +355,16 @@ try:
 												<br>'''
 						elif getHistory["items"][i]["attachments"][0]["type"] == "audio_message":
 							sms = getHistory["items"][i]["text"]
+							transcription = getHistory["items"][i]["attachments"][0]["audio_message"]["transcript"]
 							if _audio == 0:
 								url_audio = getHistory["items"][i]["attachments"][0]["audio_message"]["link_mp3"]
 								if getHistory["items"][i]["text"] != "":
-									
 									html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 													{sms}
 													<br>
 													<audio src='{url_audio}' controls='controls'></audio>
+													<br>
+													<span>{transcription}</span>
 													<span style='font-size: 10px; color: #000; font-weight: bold; margin-left: 5px'>
 														{user}
 													</span>
@@ -378,6 +376,8 @@ try:
 								elif getHistory["items"][i]["text"] == "":
 									html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 													<audio src='{url_audio}' controls='controls'></audio>
+													<br>
+													<span>{transcription}</span>
 													<span style='font-size: 10px; color: #000; font-weight: bold; margin-left: 5px'>
 														{user}
 													</span>
@@ -401,6 +401,8 @@ try:
 													{sms}
 													<br>
 													<audio src='{name_audio}' controls='controls'></audio>
+													<br>
+													<span>{transcription}</span>
 													<span style='font-size: 10px; color: #000; font-weight: bold; margin-left: 5px'>
 														{user}
 													</span>
@@ -412,6 +414,8 @@ try:
 								elif getHistory["items"][i]["text"] == "":
 									html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 													<audio src='{name_audio}' controls='controls'></audio>
+													<br>
+													<span>{transcription}</span>
 													<span style='font-size: 10px; color: #000; font-weight: bold; margin-left: 5px'>
 														{user}
 													</span>
@@ -1072,41 +1076,41 @@ try:
 
 				#html components
 				style = '''::-webkit-scrollbar {
-							width: 12px;
-						}
-							 
-						::-webkit-scrollbar-track {
-								background-color: rgba(0, 0, 0, 0.3)
-						}
-							 
-						::-webkit-scrollbar-thumb {
-							-webkit-border: 1px #fff;
-							border-radius: 20px;
-							background-color: #fff;
-							-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
-						}
+			width: 12px;
+		}
+			 
+		::-webkit-scrollbar-track {
+				background-color: rgba(0, 0, 0, 0.3)
+		}
+			 
+		::-webkit-scrollbar-thumb {
+			-webkit-border: 1px #fff;
+			border-radius: 20px;
+			background-color: #fff;
+			-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
+		}
 
-						* {
-							font-family: sans-serif;
-						}'''
+		* {
+			font-family: sans-serif;
+		}'''
 
 				html1 = f'''<!DOCTYPE html>
-							<html>
-								<head>
-									<meta charset="utf-8">
-									<title>{name}</title>
-									<style>
-									{style}
-									</style>
-								</head>
-								<body style='background-color: #333;'>
-									<div style='width: 750px; margin: 10px auto 10px auto; background: linear-gradient(to right, #3E608A, #69A3EA); border-radius: 20px'>
-										<center><a href='{link_user}' target='_blank'><img src='avatar.jpg' style='height: 100px; border-radius: 100px; margin-top: 20px; box-shadow: 0px 0px 10px #000'></a></center>
-										<center style='padding: 10px; font-size: 20px; color: #fff'>{name}</center>
-										{users}
-										{msgs_count}
-									</div>
-									<div style='width: 750px; box-sizing: padding-box; background: linear-gradient(to right, #3E608A, #69A3EA); border-radius: 20px; margin-left: auto; margin-right: auto'>'''
+			<html>
+				<head>
+					<meta charset="utf-8">
+					<title>{name}</title>
+					<style>
+					{style}
+					</style>
+				</head>
+				<body style='background-color: #333;'>
+					<div style='width: 750px; margin: 10px auto 10px auto; background: linear-gradient(to right, #3E608A, #69A3EA); border-radius: 20px'>
+						<center><a href='{link_user}' target='_blank'><img src='avatar.jpg' style='height: 100px; border-radius: 100px; margin-top: 20px; box-shadow: 0px 0px 10px #000'></a></center>
+						<center style='padding: 10px; font-size: 20px; color: #fff'>{name}</center>
+						{users}
+						{msgs_count}
+					</div>
+					<div style='width: 750px; box-sizing: padding-box; background: linear-gradient(to right, #3E608A, #69A3EA); border-radius: 20px; margin-left: auto; margin-right: auto'>'''
 
 				html3 = '''
 								</div>
@@ -1217,14 +1221,16 @@ try:
 													<br>'''
 							elif getHistory["items"][i]["attachments"][0]["type"] == "audio_message":
 								sms = getHistory["items"][i]["text"]
+								transcription = getHistory["items"][i]["attachments"][0]["audio_message"]["transcript"]
 								if _audio == 0:
 									url_audio = getHistory["items"][i]["attachments"][0]["audio_message"]["link_mp3"]
 									if getHistory["items"][i]["text"] != "":
-										
 										html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 														{sms}
 														<br>
 														<audio src='{url_audio}' controls='controls'></audio>
+														<br>
+														<span>{transcription}</span>
 														<span style='font-size: 10px; color: #000; font-weight: bold; margin-left: 5px'>
 															{user}
 														</span>
@@ -1236,6 +1242,8 @@ try:
 									elif getHistory["items"][i]["text"] == "":
 										html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 														<audio src='{url_audio}' controls='controls'></audio>
+														<br>
+														<span>{transcription}</span>
 														<span style='font-size: 10px; color: #000; font-weight: bold; margin-left: 5px'>
 															{user}
 														</span>
@@ -1259,6 +1267,8 @@ try:
 														{sms}
 														<br>
 														<audio src='{name_audio}' controls='controls'></audio>
+														<br>
+														<span>{transcription}</span>
 														<span style='font-size: 10px; color: #000; font-weight: bold; margin-left: 5px'>
 															{user}
 														</span>
@@ -1270,6 +1280,8 @@ try:
 									elif getHistory["items"][i]["text"] == "":
 										html2 += f'''{ava_msg}<div style='display: inline-block; max-width: 600px; background-color: #D6E1E7; padding: 10px; border-radius: 20px; margin: 10px -50px auto 5px'>
 														<audio src='{name_audio}' controls='controls'></audio>
+														<br>
+														<span>{transcription}</span>
 														<span style='font-size: 10px; color: #000; font-weight: bold; margin-left: 5px'>
 															{user}
 														</span>

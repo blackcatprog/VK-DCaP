@@ -2,7 +2,7 @@ try:
 	try:
 		import sys
 		import vk_api
-		from cfg import token
+		from token import token
 		import requests
 		from datetime import datetime as dt
 		import os
@@ -11,7 +11,7 @@ try:
 		import shutil
 	except (ModuleNotFoundError, ImportError) as module_error:
 		mdl = str(module_error).split("'")[1]
-		error(f"Отсутствует необходимый модуль {mdl}")
+		error(f"Отсутствует необходимый модуль {mdl}!")
 		sys.exit(1)
 
 	def auth():
@@ -240,7 +240,7 @@ try:
 								file.write(url_music.content)
 						elif _folder != 0:
 							with open(f"{_folder}/{name_music}", "wb") as file:
-								file.write(url_msuic.content)
+								file.write(url_music.content)
 						html2 += f'''<div style='margin-bottom: 10px; width: 750px; box-sizing: content-box; background: linear-gradient(to right, #3E608A, #69A3EA); border-radius: 10px; font-family: sans-serif; margin-left: auto; margin-right: auto;'>
 										<audio src='{name_music}' controls='controls' style='padding: 10px'></audio>
 										<span style='display: inline-block; padding: 10px'>{j["text"]}</span>
