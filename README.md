@@ -9,7 +9,6 @@
 <video src="video.mkv" controls width="320" height="240">
 </video>
 
-Получите токен от вконтакте:
 1) Установите все необходимые модули "pip install -r requirements.txt"
 1) [Перейдите на этот сайт](https://vkhost.github.io)
 2) Выберите vk admin, нажмите разрешить
