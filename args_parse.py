@@ -2,26 +2,22 @@ try:
 	try:
 		import argparse
 		import sys
+		import logs
 		import shutil
-		from logs import *
 		import dcap_cfg
 		from urllib.request import urlopen
 		from dwn_dlg import dwn_dlg
 		from dwn_pst import dwn_pst
 	except ModuleNotFoundError:
-		error("Отсутствует(ют) необходимый(е) модуль(и)!")
+		logs.error("Отсутствует(ют) необходимый(е) модуль(и)!")
 		sys.exit(1)
 
-	#variables
-	pch = shutil.rmtree("__pycache__")
-
 	def main():
-
 		def check_connection():
 			try:
 				urlopen("https://google.com")
 			except Exception as e:
-				error("Нет подключения к интернету!")
+				logs.error("Нет подключения к интернету!")
 				sys.exit(1)
 
 		def info_():
@@ -45,7 +41,7 @@ try:
 	-sm - оформлять музыку
 	-help - краткая документация (вы её сейчас и смотрите :) )''')
 			try:
-				pch
+				shutil.rmtree("__pycache__")
 			except Exception:
 				pass
 			sys.exit(1)
@@ -56,7 +52,7 @@ try:
 			print(f"Copyright (C) 2021 {dcap_cfg.author}")
 			print(f"github repository: {dcap_cfg.repository}")
 			try:
-				pch
+				shutil.rmtree("__pycache__")
 			except Exception:
 				pass
 
@@ -103,7 +99,7 @@ try:
 				all_ = args.all_all
 				q_ = args.quality
 				ud_ = args.avs_dwn
-				dwn_dlg(sys.argv[2], count_, _photo=id_, _audio=ad_, _music=md_, _doc=dd_, _sd=sd_, _folder=f_, _af=af_, _ul=ul_, _cv=cv_, _all=all_, _q=q_, _ud=ud_)
+				dwn_dlg(sys.argv[2], count_, photo_=id_, audio_=ad_, music_=md_, doc_=dd_, sd_=sd_, folder_=f_, af_=af_, ul_=ul_, cv_=cv_, all_=all_, q_=q_, ud_=ud_)
 			elif args.post:
 				if args.count:
 					count_ = args.count
@@ -115,9 +111,10 @@ try:
 				md_ = args.mus
 				dd_ = args.doc
 				f_ = args.folder
+				all_ = args.all_all
 				af_ = args.all
 				q_ = args.quality
-				dwn_pst(sys.argv[2], count_, _photo=id_, _music=md_, _doc=dd_, _folder=f_, _af=af_, _q=q_)
+				dwn_pst(sys.argv[2], count_, photo_=id_, music_=md_, doc_=dd_, folder_=f_, af_=af_, q_=q_, all_=all_)
 except KeyboardInterrupt:
-	warn("Выход!")
+	logs.warn("Выход!")
 	sys.exit(1)
